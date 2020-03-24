@@ -91,6 +91,7 @@ private:
 		Transform pose_global;
 
 		Vector3 rotation;
+		Vector3 scale;
 
 		bool custom_pose_enable;
 		Transform custom_pose;
@@ -203,10 +204,13 @@ public:
 
 	Ref<SkinReference> register_skin(const Ref<Skin> &p_skin);
 
-	// separate rotation and scale
+	// Decomposed Transform values
 
 	void set_bone_rotation(int p_bone, const Vector3 &p_rotation);
 	Vector3 get_bone_rotation(int p_bone) const;
+
+	void set_bone_scale(int p_bone, const Vector3 &p_scale);
+	Vector3 get_bone_scale(int p_bone) const;
 
 #ifndef _3D_DISABLED
 	// Physical bone API

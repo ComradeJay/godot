@@ -93,6 +93,8 @@ bool Skeleton::_set(const StringName &p_path, const Variant &p_value) {
 		set_bone_pose(which, p_value);
 	else if (what == "rotation")
 		set_bone_rotation(which, p_value);
+	else if (what == "scale")
+		set_bone_scale(which, p_value);
 	else if (what == "bound_children") {
 		Array children = p_value;
 
@@ -139,6 +141,8 @@ bool Skeleton::_get(const StringName &p_path, Variant &r_ret) const {
 		r_ret = get_bone_pose(which);
 	else if (what == "rotation")
 		r_ret = get_bone_rotation(which);
+	else if (what == "scale")
+		r_ret = get_bone_scale(which);
 	else if (what == "bound_children") {
 		Array children;
 
@@ -171,6 +175,7 @@ void Skeleton::_get_property_list(List<PropertyInfo> *p_list) const {
 		p_list->push_back(PropertyInfo(Variant::BOOL, prep + "enabled"));
 		p_list->push_back(PropertyInfo(Variant::TRANSFORM, prep + "pose", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR));
 		p_list->push_back(PropertyInfo(Variant::VECTOR3, prep + "rotation"));
+		p_list->push_back(PropertyInfo(Variant::VECTOR3, prep + "scale"));
 		p_list->push_back(PropertyInfo(Variant::ARRAY, prep + "bound_children"));
 	}
 }
@@ -586,6 +591,8 @@ Transform Skeleton::get_bone_pose(int p_bone) const {
 	return bones[p_bone].pose;
 }
 
+// Decomposed Transform values 
+
 void Skeleton::set_bone_rotation(int p_bone, const Vector3 &p_rotation) {
 
 	ERR_FAIL_INDEX(p_bone, bones.size());
@@ -596,6 +603,20 @@ Vector3 Skeleton::get_bone_rotation(int p_bone) const {
 
 	ERR_FAIL_INDEX_V(p_bone, bones.size(), Vector3());
 	return bones[p_bone].pose.basis.get_rotation_euler();
+}
+
+void Skeleton::set_bone_scale(int p_bone, const Vector3 &p_scale) {
+	
+	ERR_FAIL_INDEX(p_bone, bones.size());
+
+	bones.write[p_bone].pose.basis.orthonormalize();
+	bones.write[p_bone].pose.basis.scale(p_scale);
+}
+
+Vector3 Skeleton::get_bone_scale(int p_bone) const {
+
+	ERR_FAIL_INDEX_V(p_bone, bones.size(), Vector3());
+	return bones[p_bone].pose.basis.get_scale();
 }
 
 void Skeleton::set_bone_custom_pose(int p_bone, const Transform &p_custom_pose) {
