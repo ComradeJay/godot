@@ -90,6 +90,8 @@ private:
 		Transform pose;
 		Transform pose_global;
 
+		Vector3 rotation;
+
 		bool custom_pose_enable;
 		Transform custom_pose;
 
@@ -200,6 +202,11 @@ public:
 	int get_process_order(int p_idx);
 
 	Ref<SkinReference> register_skin(const Ref<Skin> &p_skin);
+
+	// separate rotation and scale
+
+	void set_bone_rotation(int p_bone, const Vector3 &p_rotation);
+	Vector3 get_bone_rotation(int p_bone) const;
 
 #ifndef _3D_DISABLED
 	// Physical bone API
