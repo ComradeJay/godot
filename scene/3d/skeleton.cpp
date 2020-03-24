@@ -590,12 +590,12 @@ void Skeleton::set_bone_rotation(int p_bone, const Vector3 &p_rotation) {
 
 	ERR_FAIL_INDEX(p_bone, bones.size());
 
-	bones.write[p_bone].rotation = p_rotation;
+	bones.write[p_bone].pose.basis.set_euler_xyz(p_rotation);
 }
 Vector3 Skeleton::get_bone_rotation(int p_bone) const {
 
 	ERR_FAIL_INDEX_V(p_bone, bones.size(), Vector3());
-	return bones[p_bone].rotation;
+	return bones[p_bone].pose.basis.get_rotation_euler();
 }
 
 void Skeleton::set_bone_custom_pose(int p_bone, const Transform &p_custom_pose) {
