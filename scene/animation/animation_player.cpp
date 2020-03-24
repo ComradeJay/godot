@@ -256,10 +256,15 @@ void AnimationPlayer::_ensure_node_caches(AnimationData *p_anim) {
 
 			Skeleton *sk = Object::cast_to<Skeleton>(child);
 			bone_idx = sk->find_bone(a->track_get_path(i).get_subname(0));
-			if (bone_idx == -1) {
 
-				continue;
-			}
+			// I don't know why this is here. All it seems to do is disable 
+			// the ability to animate any other properties in Skeleton 
+			// (other than bone transforms). And bone transforms seem to animate
+			// just fine without this.
+			// if (bone_idx == -1) {
+
+			// 	continue;
+			// }
 		}
 
 		{
