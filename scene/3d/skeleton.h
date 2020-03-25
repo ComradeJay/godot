@@ -90,6 +90,7 @@ private:
 		Transform pose;
 		Transform pose_global;
 
+		Vector3 translation = Vector3(0, 0, 0);
 		Vector3 rotation = Vector3(0, 0, 0);
 		Vector3 scale = Vector3(1, 1, 1);
 
@@ -205,6 +206,8 @@ public:
 	Ref<SkinReference> register_skin(const Ref<Skin> &p_skin);
 
 	// Decomposed Transform values
+	void set_bone_translation(int p_bone, const Vector3 &p_translation);
+	Vector3 get_bone_translation(int p_bone) const;
 
 	void set_bone_rotation(int p_bone, const Vector3 &p_rotation);
 	Vector3 get_bone_rotation(int p_bone) const;

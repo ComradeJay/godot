@@ -91,6 +91,8 @@ bool Skeleton::_set(const StringName &p_path, const Variant &p_value) {
 		set_bone_enabled(which, p_value);
 	else if (what == "pose")
 		set_bone_pose(which, p_value);
+	else if (what == "translation")
+		set_bone_translation(which, p_value);
 	else if (what == "rotation")
 		set_bone_rotation(which, p_value);
 	else if (what == "scale")
@@ -139,6 +141,8 @@ bool Skeleton::_get(const StringName &p_path, Variant &r_ret) const {
 		r_ret = is_bone_enabled(which);
 	else if (what == "pose")
 		r_ret = get_bone_pose(which);
+	else if (what == "translation")
+		r_ret = get_bone_translation(which);
 	else if (what == "rotation")
 		r_ret = get_bone_rotation(which);
 	else if (what == "scale")
@@ -174,6 +178,7 @@ void Skeleton::_get_property_list(List<PropertyInfo> *p_list) const {
 		p_list->push_back(PropertyInfo(Variant::TRANSFORM, prep + "rest"));
 		p_list->push_back(PropertyInfo(Variant::BOOL, prep + "enabled"));
 		p_list->push_back(PropertyInfo(Variant::TRANSFORM, prep + "pose", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR));
+		p_list->push_back(PropertyInfo(Variant::VECTOR3, prep + "translation"));
 		p_list->push_back(PropertyInfo(Variant::VECTOR3, prep + "rotation"));
 		p_list->push_back(PropertyInfo(Variant::VECTOR3, prep + "scale"));
 		p_list->push_back(PropertyInfo(Variant::ARRAY, prep + "bound_children"));
@@ -581,6 +586,7 @@ void Skeleton::set_bone_pose(int p_bone, const Transform &p_pose) {
 	ERR_FAIL_INDEX(p_bone, bones.size());
 
 	bones.write[p_bone].pose = p_pose;
+	bones.write[p_bone].pose.origin += bones[p_bone].translation;
 	bones.write[p_bone].pose.basis.scale(bones[p_bone].scale);
 	bones.write[p_bone].pose.basis.rotate(bones[p_bone].rotation);
 	if (is_inside_tree()) {
@@ -595,6 +601,18 @@ Transform Skeleton::get_bone_pose(int p_bone) const {
 
 // Decomposed Transform values 
 
+void Skeleton::set_bone_translation(int p_bone, const Vector3 &p_translation) {
+
+	ERR_FAIL_INDEX(p_bone, bones.size());
+
+	bones.write[p_bone].translation = p_translation;
+	set_bone_pose(p_bone, Transform());
+}
+Vector3 Skeleton::get_bone_translation(int p_bone) const {
+
+	ERR_FAIL_INDEX_V(p_bone, bones.size(), Vector3());
+	return bones[p_bone].translation;
+}
 void Skeleton::set_bone_rotation(int p_bone, const Vector3 &p_rotation) {
 
 	ERR_FAIL_INDEX(p_bone, bones.size());
