@@ -2803,6 +2803,19 @@ void EditorSceneImporterGLTF::_import_animation(GLTFState &state, AnimationPlaye
 			int track_idx = animation->get_track_count();
 			animation->add_track(Animation::TYPE_TRANSFORM);
 			animation->track_set_path(track_idx, node_path);
+			//make translation track
+			int t_track_idx = animation->get_track_count();
+			animation->add_track(Animation::TYPE_VALUE);
+			String t_path = String(node_path) + ":translation";
+			//make rotation track
+			int r_track_idx = animation->get_track_count();
+			animation->add_track(Animation::TYPE_VALUE);
+			String r_path = String(node_path) + ":rotation";
+			//make scale track
+			int s_track_idx = animation->get_track_count();
+			animation->add_track(Animation::TYPE_VALUE);
+			String s_path = String(node_path) + ":scale";
+
 			//first determine animation length
 
 			const float increment = 1.0 / float(bake_fps);
@@ -2857,9 +2870,18 @@ void EditorSceneImporterGLTF::_import_animation(GLTFState &state, AnimationPlaye
 					rot.normalize();
 					scale = xform.basis.get_scale();
 					pos = xform.origin;
+					t_path = String(ap->get_parent()->get_path_to(skeleton)) + ":bones/" + itos(bone_idx) + "/translation";
+					r_path = String(ap->get_parent()->get_path_to(skeleton)) + ":bones/" + itos(bone_idx) + "/rotation";
+					s_path = String(ap->get_parent()->get_path_to(skeleton)) + ":bones/" + itos(bone_idx) + "/scale";
 				}
 
 				animation->transform_track_insert_key(track_idx, time, pos, rot, scale);
+				animation->track_set_path(t_track_idx, NodePath(t_path));
+				animation->track_set_path(r_track_idx, NodePath(r_path));
+				animation->track_set_path(s_track_idx, NodePath(s_path));
+				animation->track_insert_key(t_track_idx, time, pos);
+				animation->track_insert_key(r_track_idx, time, rot.get_euler_xyz());
+				animation->track_insert_key(s_track_idx, time, scale);
 
 				if (last) {
 					break;
