@@ -1883,6 +1883,15 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 					_edit.plane = TRANSFORM_Z_AXIS;
 				}
 			}
+			if (ED_IS_SHORTCUT("spatial_editor/yzlock", p_event)) {
+				_edit.plane = TRANSFORM_YZ;
+			}
+			if (ED_IS_SHORTCUT("spatial_editor/xzlock", p_event)) {
+				_edit.plane = TRANSFORM_XZ;
+			}
+			if (ED_IS_SHORTCUT("spatial_editor/xylock", p_event)) {
+				_edit.plane = TRANSFORM_XY;
+			}
 		}
 
 		if (ED_IS_SHORTCUT("spatial_editor/snap", p_event)) {
@@ -5892,6 +5901,9 @@ SpatialEditor::SpatialEditor(EditorNode *p_editor) {
 	ED_SHORTCUT("spatial_editor/xlock", TTR("X-Lock"), KEY_X);
 	ED_SHORTCUT("spatial_editor/ylock", TTR("Y-Lock"), KEY_Y);
 	ED_SHORTCUT("spatial_editor/zlock", TTR("Z-Lock"), KEY_Z);
+	ED_SHORTCUT("spatial_editor/yzlock", TTR("YZ-Lock"), KEY_MASK_SHIFT + KEY_X);
+	ED_SHORTCUT("spatial_editor/xzlock", TTR("XZ-Lock"), KEY_MASK_SHIFT + KEY_Y);
+	ED_SHORTCUT("spatial_editor/xylock", TTR("XY-Lock"), KEY_MASK_SHIFT + KEY_Z);
 
 	PopupMenu *p;
 
