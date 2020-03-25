@@ -1418,6 +1418,372 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 					if (selected_handle != -1)
 						spatial_editor->select_gizmo_highlight_axis(-1);
 				}
+			} 
+			if (!_edit.mode == TRANSFORM_NONE){
+				Vector3 ray_pos = _get_ray_pos(m->get_position());
+				Vector3 ray = _get_ray(m->get_position());
+				float snap = EDITOR_GET("interface/inspector/default_float_step");
+				int snap_step_decimals = Math::range_step_decimals(snap);
+				switch (_edit.mode) {
+
+					case TRANSFORM_SCALE: {
+
+						Vector3 motion_mask;
+						Plane plane;
+						bool plane_mv = false;
+
+						switch (_edit.plane) {
+							case TRANSFORM_VIEW:
+								motion_mask = Vector3(0, 0, 0);
+								plane = Plane(_edit.center, _get_camera_normal());
+								break;
+							case TRANSFORM_X_AXIS:
+								motion_mask = spatial_editor->get_gizmo_transform().basis.get_axis(0);
+								plane = Plane(_edit.center, motion_mask.cross(motion_mask.cross(_get_camera_normal())).normalized());
+								break;
+							case TRANSFORM_Y_AXIS:
+								motion_mask = spatial_editor->get_gizmo_transform().basis.get_axis(1);
+								plane = Plane(_edit.center, motion_mask.cross(motion_mask.cross(_get_camera_normal())).normalized());
+								break;
+							case TRANSFORM_Z_AXIS:
+								motion_mask = spatial_editor->get_gizmo_transform().basis.get_axis(2);
+								plane = Plane(_edit.center, motion_mask.cross(motion_mask.cross(_get_camera_normal())).normalized());
+								break;
+							case TRANSFORM_YZ:
+								motion_mask = spatial_editor->get_gizmo_transform().basis.get_axis(2) + spatial_editor->get_gizmo_transform().basis.get_axis(1);
+								plane = Plane(_edit.center, spatial_editor->get_gizmo_transform().basis.get_axis(0));
+								plane_mv = true;
+								break;
+							case TRANSFORM_XZ:
+								motion_mask = spatial_editor->get_gizmo_transform().basis.get_axis(2) + spatial_editor->get_gizmo_transform().basis.get_axis(0);
+								plane = Plane(_edit.center, spatial_editor->get_gizmo_transform().basis.get_axis(1));
+								plane_mv = true;
+								break;
+							case TRANSFORM_XY:
+								motion_mask = spatial_editor->get_gizmo_transform().basis.get_axis(0) + spatial_editor->get_gizmo_transform().basis.get_axis(1);
+								plane = Plane(_edit.center, spatial_editor->get_gizmo_transform().basis.get_axis(2));
+								plane_mv = true;
+								break;
+						}
+
+						Vector3 intersection;
+						if (!plane.intersects_ray(ray_pos, ray, &intersection))
+							break;
+
+						Vector3 click;
+						if (!plane.intersects_ray(_edit.click_ray_pos, _edit.click_ray, &click))
+							break;
+
+						Vector3 motion = intersection - click;
+						if (_edit.plane != TRANSFORM_VIEW) {
+
+							if (!plane_mv) {
+
+								motion = motion_mask.dot(motion) * motion_mask;
+
+							} else {
+
+								// Alternative planar scaling mode
+								if (_get_key_modifier(m) != KEY_SHIFT) {
+									motion = motion_mask.dot(motion) * motion_mask;
+								}
+							}
+
+						} else {
+							float center_click_dist = click.distance_to(_edit.center);
+							float center_inters_dist = intersection.distance_to(_edit.center);
+							if (center_click_dist == 0)
+								break;
+
+							float scale = center_inters_dist - center_click_dist;
+							motion = Vector3(scale, scale, scale);
+						}
+
+						List<Node *> &selection = editor_selection->get_selected_node_list();
+
+						// Disable local transformation for TRANSFORM_VIEW
+						bool local_coords = (spatial_editor->are_local_coords_enabled() && _edit.plane != TRANSFORM_VIEW);
+
+						if (_edit.snap || spatial_editor->is_snap_enabled()) {
+							snap = spatial_editor->get_scale_snap() / 100;
+						}
+						Vector3 motion_snapped = motion;
+						motion_snapped.snap(Vector3(snap, snap, snap));
+						// This might not be necessary anymore after issue #288 is solved (in 4.0?).
+						set_message(TTR("Scaling: ") + "(" + String::num(motion_snapped.x, snap_step_decimals) + ", " +
+									String::num(motion_snapped.y, snap_step_decimals) + ", " + String::num(motion_snapped.z, snap_step_decimals) + ")");
+
+						for (List<Node *>::Element *E = selection.front(); E; E = E->next()) {
+
+							Spatial *sp = Object::cast_to<Spatial>(E->get());
+							if (!sp) {
+								continue;
+							}
+
+							SpatialEditorSelectedItem *se = editor_selection->get_node_editor_data<SpatialEditorSelectedItem>(sp);
+							if (!se) {
+								continue;
+							}
+
+							if (sp->has_meta("_edit_lock_")) {
+								continue;
+							}
+
+							Transform original = se->original;
+							Transform original_local = se->original_local;
+							Transform base = Transform(Basis(), _edit.center);
+							Transform t;
+							Vector3 local_scale;
+
+							if (local_coords) {
+
+								Basis g = original.basis.orthonormalized();
+								Vector3 local_motion = g.inverse().xform(motion);
+
+								if (_edit.snap || spatial_editor->is_snap_enabled()) {
+									local_motion.snap(Vector3(snap, snap, snap));
+								}
+
+								local_scale = original_local.basis.get_scale() * (local_motion + Vector3(1, 1, 1));
+
+								// Prevent scaling to 0 it would break the gizmo
+								Basis check = original_local.basis;
+								check.scale(local_scale);
+								if (check.determinant() != 0) {
+
+									// Apply scale
+									sp->set_scale(local_scale);
+								}
+
+							} else {
+
+								if (_edit.snap || spatial_editor->is_snap_enabled()) {
+									motion.snap(Vector3(snap, snap, snap));
+								}
+
+								Transform r;
+								r.basis.scale(motion + Vector3(1, 1, 1));
+								t = base * (r * (base.inverse() * original));
+
+								// Apply scale
+								sp->set_global_transform(t);
+							}
+						}
+
+						surface->update();
+
+					} break;
+
+					case TRANSFORM_TRANSLATE: {
+
+						Vector3 motion_mask;
+						Plane plane;
+						bool plane_mv = false;
+
+						switch (_edit.plane) {
+							case TRANSFORM_VIEW:
+								plane = Plane(_edit.center, _get_camera_normal());
+								break;
+							case TRANSFORM_X_AXIS:
+								motion_mask = spatial_editor->get_gizmo_transform().basis.get_axis(0);
+								plane = Plane(_edit.center, motion_mask.cross(motion_mask.cross(_get_camera_normal())).normalized());
+								break;
+							case TRANSFORM_Y_AXIS:
+								motion_mask = spatial_editor->get_gizmo_transform().basis.get_axis(1);
+								plane = Plane(_edit.center, motion_mask.cross(motion_mask.cross(_get_camera_normal())).normalized());
+								break;
+							case TRANSFORM_Z_AXIS:
+								motion_mask = spatial_editor->get_gizmo_transform().basis.get_axis(2);
+								plane = Plane(_edit.center, motion_mask.cross(motion_mask.cross(_get_camera_normal())).normalized());
+								break;
+							case TRANSFORM_YZ:
+								plane = Plane(_edit.center, spatial_editor->get_gizmo_transform().basis.get_axis(0));
+								plane_mv = true;
+								break;
+							case TRANSFORM_XZ:
+								plane = Plane(_edit.center, spatial_editor->get_gizmo_transform().basis.get_axis(1));
+								plane_mv = true;
+								break;
+							case TRANSFORM_XY:
+								plane = Plane(_edit.center, spatial_editor->get_gizmo_transform().basis.get_axis(2));
+								plane_mv = true;
+								break;
+						}
+
+						Vector3 intersection;
+						if (!plane.intersects_ray(ray_pos, ray, &intersection))
+							break;
+
+						Vector3 click;
+						if (!plane.intersects_ray(_edit.click_ray_pos, _edit.click_ray, &click))
+							break;
+
+						Vector3 motion = intersection - click;
+						if (_edit.plane != TRANSFORM_VIEW) {
+							if (!plane_mv) {
+								motion = motion_mask.dot(motion) * motion_mask;
+							}
+						}
+
+						List<Node *> &selection = editor_selection->get_selected_node_list();
+
+						// Disable local transformation for TRANSFORM_VIEW
+						bool local_coords = (spatial_editor->are_local_coords_enabled() && _edit.plane != TRANSFORM_VIEW);
+
+						if (_edit.snap || spatial_editor->is_snap_enabled()) {
+							snap = spatial_editor->get_translate_snap();
+						}
+						Vector3 motion_snapped = motion;
+						motion_snapped.snap(Vector3(snap, snap, snap));
+						set_message(TTR("Translating: ") + "(" + String::num(motion_snapped.x, snap_step_decimals) + ", " +
+									String::num(motion_snapped.y, snap_step_decimals) + ", " + String::num(motion_snapped.z, snap_step_decimals) + ")");
+
+						for (List<Node *>::Element *E = selection.front(); E; E = E->next()) {
+
+							Spatial *sp = Object::cast_to<Spatial>(E->get());
+							if (!sp) {
+								continue;
+							}
+
+							SpatialEditorSelectedItem *se = editor_selection->get_node_editor_data<SpatialEditorSelectedItem>(sp);
+							if (!se) {
+								continue;
+							}
+
+							if (sp->has_meta("_edit_lock_")) {
+								continue;
+							}
+
+							Transform original = se->original;
+							Transform t;
+
+							if (local_coords) {
+
+								if (_edit.snap || spatial_editor->is_snap_enabled()) {
+									Basis g = original.basis.orthonormalized();
+									Vector3 local_motion = g.inverse().xform(motion);
+									local_motion.snap(Vector3(snap, snap, snap));
+
+									motion = g.xform(local_motion);
+								}
+
+							} else {
+
+								if (_edit.snap || spatial_editor->is_snap_enabled()) {
+									motion.snap(Vector3(snap, snap, snap));
+								}
+							}
+
+							// Apply translation
+							t = original;
+							t.origin += motion;
+							sp->set_global_transform(t);
+						}
+
+						surface->update();
+
+					} break;
+
+					case TRANSFORM_ROTATE: {
+
+						Plane plane;
+						Vector3 axis;
+
+						switch (_edit.plane) {
+							case TRANSFORM_VIEW:
+								plane = Plane(_edit.center, _get_camera_normal());
+								break;
+							case TRANSFORM_X_AXIS:
+								plane = Plane(_edit.center, spatial_editor->get_gizmo_transform().basis.get_axis(0));
+								axis = Vector3(1, 0, 0);
+								break;
+							case TRANSFORM_Y_AXIS:
+								plane = Plane(_edit.center, spatial_editor->get_gizmo_transform().basis.get_axis(1));
+								axis = Vector3(0, 1, 0);
+								break;
+							case TRANSFORM_Z_AXIS:
+								plane = Plane(_edit.center, spatial_editor->get_gizmo_transform().basis.get_axis(2));
+								axis = Vector3(0, 0, 1);
+								break;
+							case TRANSFORM_YZ:
+							case TRANSFORM_XZ:
+							case TRANSFORM_XY:
+								break;
+						}
+
+						Vector3 intersection;
+						if (!plane.intersects_ray(ray_pos, ray, &intersection))
+							break;
+
+						Vector3 click;
+						if (!plane.intersects_ray(_edit.click_ray_pos, _edit.click_ray, &click))
+							break;
+
+						Vector3 y_axis = (click - _edit.center).normalized();
+						Vector3 x_axis = plane.normal.cross(y_axis).normalized();
+
+						float angle = Math::atan2(x_axis.dot(intersection - _edit.center), y_axis.dot(intersection - _edit.center));
+
+						if (_edit.snap || spatial_editor->is_snap_enabled()) {
+							snap = spatial_editor->get_rotate_snap();
+						}
+						angle = Math::rad2deg(angle) + snap * 0.5; //else it won't reach +180
+						angle -= Math::fmod(angle, snap);
+						set_message(vformat(TTR("Rotating %s degrees."), String::num(angle, snap_step_decimals)));
+						angle = Math::deg2rad(angle);
+
+						List<Node *> &selection = editor_selection->get_selected_node_list();
+
+						bool local_coords = (spatial_editor->are_local_coords_enabled() && _edit.plane != TRANSFORM_VIEW); // Disable local transformation for TRANSFORM_VIEW
+
+						for (List<Node *>::Element *E = selection.front(); E; E = E->next()) {
+
+							Spatial *sp = Object::cast_to<Spatial>(E->get());
+							if (!sp)
+								continue;
+
+							SpatialEditorSelectedItem *se = editor_selection->get_node_editor_data<SpatialEditorSelectedItem>(sp);
+							if (!se)
+								continue;
+
+							if (sp->has_meta("_edit_lock_")) {
+								continue;
+							}
+
+							Transform t;
+
+							if (local_coords) {
+
+								Transform original_local = se->original_local;
+								Basis rot = Basis(axis, angle);
+
+								t.basis = original_local.get_basis().orthonormalized() * rot;
+								t.origin = original_local.origin;
+
+								// Apply rotation
+								sp->set_transform(t);
+								sp->set_scale(original_local.basis.get_scale()); // re-apply original scale
+
+							} else {
+
+								Transform original = se->original;
+								Transform r;
+								Transform base = Transform(Basis(), _edit.center);
+
+								r.basis.rotate(plane.normal, angle);
+								t = base * r * base.inverse() * original;
+
+								// Apply rotation
+								sp->set_global_transform(t);
+							}
+						}
+
+						surface->update();
+
+					} break;
+					default: {
+					}
+				}
 			}
 		}
 
@@ -1973,6 +2339,29 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 	if (k.is_valid()) {
 		if (!k->is_pressed())
 			return;
+		
+		// Blender-like spatial manipulation
+		if (ED_IS_SHORTCUT("spatial_editor/grab", p_event)) {
+			if (_edit.mode != TRANSFORM_TRANSLATE) {
+				_edit.mode = TRANSFORM_TRANSLATE;
+				_edit.plane = TRANSFORM_VIEW;
+				_compute_edit(_edit.mouse_pos);
+			}
+		}
+		if (ED_IS_SHORTCUT("spatial_editor/rotate", p_event)) {
+			if (_edit.mode != TRANSFORM_ROTATE) {
+				_edit.mode = TRANSFORM_ROTATE;
+				_edit.plane = TRANSFORM_VIEW;
+				_compute_edit(_edit.mouse_pos);
+			}
+		}
+		if (ED_IS_SHORTCUT("spatial_editor/scale", p_event)) {
+			if (_edit.mode != TRANSFORM_SCALE) {
+				_edit.mode = TRANSFORM_SCALE;
+				_edit.plane = TRANSFORM_VIEW;
+				_compute_edit(_edit.mouse_pos);
+			}
+		}
 
 		if (ED_IS_SHORTCUT("spatial_editor/snap", p_event)) {
 			if (_edit.mode != TRANSFORM_NONE) {
