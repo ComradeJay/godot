@@ -598,6 +598,9 @@ void Skeleton::set_bone_rotation(int p_bone, const Vector3 &p_rotation) {
 	ERR_FAIL_INDEX(p_bone, bones.size());
 
 	bones.write[p_bone].pose.basis.set_euler_xyz(p_rotation);
+	if (is_inside_tree()) {
+		_make_dirty();
+	}
 }
 Vector3 Skeleton::get_bone_rotation(int p_bone) const {
 
@@ -611,6 +614,9 @@ void Skeleton::set_bone_scale(int p_bone, const Vector3 &p_scale) {
 
 	bones.write[p_bone].pose.basis.orthonormalize();
 	bones.write[p_bone].pose.basis.scale(p_scale);
+	if (is_inside_tree()) {
+		_make_dirty();
+	}
 }
 
 Vector3 Skeleton::get_bone_scale(int p_bone) const {
