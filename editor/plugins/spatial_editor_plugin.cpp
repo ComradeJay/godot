@@ -2343,6 +2343,7 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 			return;
 		
 		// Blender-like spatial manipulation
+		// Grab/Rotate/Scale
 		if (ED_IS_SHORTCUT("spatial_editor/grab", p_event)) {
 			if (_edit.mode != TRANSFORM_TRANSLATE) {
 				_edit.mode = TRANSFORM_TRANSLATE;
@@ -2362,6 +2363,19 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 				_edit.mode = TRANSFORM_SCALE;
 				_edit.plane = TRANSFORM_VIEW;
 				_compute_edit(_edit.mouse_pos);
+			}
+		}
+
+		// Axis-locking
+		if (_edit.mode != TRANSFORM_NONE) {
+			if (ED_IS_SHORTCUT("spatial_editor/xlock", p_event)) {
+				_edit.plane = TRANSFORM_X_AXIS;
+			}
+			if (ED_IS_SHORTCUT("spatial_editor/ylock", p_event)) {
+				_edit.plane = TRANSFORM_Y_AXIS;
+			}
+			if (ED_IS_SHORTCUT("spatial_editor/zlock", p_event)) {
+				_edit.plane = TRANSFORM_Z_AXIS;
 			}
 		}
 
@@ -6422,6 +6436,9 @@ SpatialEditor::SpatialEditor(EditorNode *p_editor) {
 	ED_SHORTCUT("spatial_editor/grab", TTR("Grab"), KEY_G);
 	ED_SHORTCUT("spatial_editor/rotate", TTR("Rotate"), KEY_R);
 	ED_SHORTCUT("spatial_editor/scale", TTR("Scale"), KEY_S);
+	ED_SHORTCUT("spatial_editor/xlock", TTR("X-Lock"), KEY_X);
+	ED_SHORTCUT("spatial_editor/ylock", TTR("Y-Lock"), KEY_Y);
+	ED_SHORTCUT("spatial_editor/zlock", TTR("Z-Lock"), KEY_Z);
 
 	PopupMenu *p;
 
