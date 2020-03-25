@@ -6028,6 +6028,9 @@ SpatialEditor::SpatialEditor(EditorNode *p_editor) {
 	ED_SHORTCUT("spatial_editor/align_transform_with_view", TTR("Align Transform with View"), KEY_MASK_ALT + KEY_MASK_CMD + KEY_M);
 	ED_SHORTCUT("spatial_editor/align_rotation_with_view", TTR("Align Rotation with View"), KEY_MASK_ALT + KEY_MASK_CMD + KEY_F);
 	ED_SHORTCUT("spatial_editor/freelook_toggle", TTR("Toggle Freelook"), KEY_MASK_SHIFT + KEY_F);
+	ED_SHORTCUT("spatial_editor/grab", TTR("Grab"), KEY_G);
+	ED_SHORTCUT("spatial_editor/rotate", TTR("Rotate"), KEY_R);
+	ED_SHORTCUT("spatial_editor/scale", TTR("Scale"), KEY_S);
 
 	PopupMenu *p;
 
