@@ -90,8 +90,8 @@ private:
 		Transform pose;
 		Transform pose_global;
 
-		Vector3 rotation;
-		Vector3 scale;
+		Vector3 rotation = Vector3(0, 0, 0);
+		Vector3 scale = Vector3(1, 1, 1);
 
 		bool custom_pose_enable;
 		Transform custom_pose;

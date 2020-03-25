@@ -581,6 +581,8 @@ void Skeleton::set_bone_pose(int p_bone, const Transform &p_pose) {
 	ERR_FAIL_INDEX(p_bone, bones.size());
 
 	bones.write[p_bone].pose = p_pose;
+	bones.write[p_bone].pose.basis.scale(bones[p_bone].scale);
+	bones.write[p_bone].pose.basis.rotate(bones[p_bone].rotation);
 	if (is_inside_tree()) {
 		_make_dirty();
 	}
@@ -597,32 +599,27 @@ void Skeleton::set_bone_rotation(int p_bone, const Vector3 &p_rotation) {
 
 	ERR_FAIL_INDEX(p_bone, bones.size());
 
-	bones.write[p_bone].pose.basis.set_euler_xyz(p_rotation);
-	if (is_inside_tree()) {
-		_make_dirty();
-	}
+	bones.write[p_bone].rotation = p_rotation;
+	set_bone_pose(p_bone, Transform());
 }
 Vector3 Skeleton::get_bone_rotation(int p_bone) const {
 
 	ERR_FAIL_INDEX_V(p_bone, bones.size(), Vector3());
-	return bones[p_bone].pose.basis.get_rotation_euler();
+	return bones[p_bone].rotation;
 }
 
 void Skeleton::set_bone_scale(int p_bone, const Vector3 &p_scale) {
 	
 	ERR_FAIL_INDEX(p_bone, bones.size());
 
-	bones.write[p_bone].pose.basis.orthonormalize();
-	bones.write[p_bone].pose.basis.scale(p_scale);
-	if (is_inside_tree()) {
-		_make_dirty();
-	}
+	bones.write[p_bone].scale = p_scale;
+	set_bone_pose(p_bone, Transform());
 }
 
 Vector3 Skeleton::get_bone_scale(int p_bone) const {
 
 	ERR_FAIL_INDEX_V(p_bone, bones.size(), Vector3());
-	return bones[p_bone].pose.basis.get_scale();
+	return bones[p_bone].scale;
 }
 
 void Skeleton::set_bone_custom_pose(int p_bone, const Transform &p_custom_pose) {
