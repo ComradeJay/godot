@@ -1023,125 +1023,127 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 				}
 			} break;
 			case BUTTON_LEFT: {
-
+				
 				if (b->is_pressed()) {
-
-					NavigationScheme nav_scheme = (NavigationScheme)EditorSettings::get_singleton()->get("editors/3d/navigation/navigation_scheme").operator int();
-					if ((nav_scheme == NAVIGATION_MAYA || nav_scheme == NAVIGATION_MODO) && b->get_alt()) {
-						break;
-					}
-
-					if (spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_LIST_SELECT) {
-						_list_select(b);
-						break;
-					}
-
-					_edit.mouse_pos = b->get_position();
-					_edit.snap = spatial_editor->is_snap_enabled();
-					_edit.mode = TRANSFORM_NONE;
-
-					//gizmo has priority over everything
-
-					bool can_select_gizmos = true;
-
-					{
-						int idx = view_menu->get_popup()->get_item_index(VIEW_GIZMOS);
-						can_select_gizmos = view_menu->get_popup()->is_item_checked(idx);
-					}
-
-					if (can_select_gizmos && spatial_editor->get_selected()) {
-
-						Ref<EditorSpatialGizmo> seg = spatial_editor->get_selected()->get_gizmo();
-						if (seg.is_valid()) {
-							int handle = -1;
-							Vector3 point;
-							Vector3 normal;
-							bool inters = seg->intersect_ray(camera, _edit.mouse_pos, point, normal, &handle, b->get_shift());
-							if (inters && handle != -1) {
-
-								_edit.gizmo = seg;
-								_edit.gizmo_handle = handle;
-								_edit.gizmo_initial_value = seg->get_handle_value(handle);
-								break;
-							}
+					// If in the middle of a blender-like transform, do not run the following code
+					if (!((spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_BLENDER) && (_edit.mode != TRANSFORM_NONE))){
+						NavigationScheme nav_scheme = (NavigationScheme)EditorSettings::get_singleton()->get("editors/3d/navigation/navigation_scheme").operator int();
+						if ((nav_scheme == NAVIGATION_MAYA || nav_scheme == NAVIGATION_MODO) && b->get_alt()) {
+							break;
 						}
-					}
 
-					if (_gizmo_select(_edit.mouse_pos))
-						break;
+						if (spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_LIST_SELECT) {
+							_list_select(b);
+							break;
+						}
 
-					clicked = 0;
-					clicked_includes_current = false;
+						_edit.mouse_pos = b->get_position();
+						_edit.snap = spatial_editor->is_snap_enabled();
+						_edit.mode = TRANSFORM_NONE;
 
-					if ((spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_SELECT && b->get_control()) || spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_ROTATE) {
+						//gizmo has priority over everything
 
-						/* HANDLE ROTATION */
-						if (get_selected_count() == 0)
-							break; //bye
-						//handle rotate
-						_edit.mode = TRANSFORM_ROTATE;
-						_compute_edit(b->get_position());
-						break;
-					}
+						bool can_select_gizmos = true;
 
-					if (spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_MOVE) {
+						{
+							int idx = view_menu->get_popup()->get_item_index(VIEW_GIZMOS);
+							can_select_gizmos = view_menu->get_popup()->is_item_checked(idx);
+						}
 
-						if (get_selected_count() == 0)
-							break; //bye
-						//handle translate
-						_edit.mode = TRANSFORM_TRANSLATE;
-						_compute_edit(b->get_position());
-						break;
-					}
+						if (can_select_gizmos && spatial_editor->get_selected()) {
 
-					if (spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_SCALE) {
-
-						if (get_selected_count() == 0)
-							break; //bye
-						//handle scale
-						_edit.mode = TRANSFORM_SCALE;
-						_compute_edit(b->get_position());
-						break;
-					}
-
-					// todo scale
-
-					int gizmo_handle = -1;
-
-					clicked = _select_ray(b->get_position(), b->get_shift(), clicked_includes_current, &gizmo_handle, b->get_shift());
-
-					//clicking is always deferred to either move or release
-
-					clicked_wants_append = b->get_shift();
-
-					if (!clicked) {
-
-						if (!clicked_wants_append)
-							_clear_selected();
-
-						//default to regionselect
-						cursor.region_select = true;
-						cursor.region_begin = b->get_position();
-						cursor.region_end = b->get_position();
-					}
-
-					if (clicked && gizmo_handle >= 0) {
-
-						Spatial *spa = Object::cast_to<Spatial>(ObjectDB::get_instance(clicked));
-						if (spa) {
-
-							Ref<EditorSpatialGizmo> seg = spa->get_gizmo();
+							Ref<EditorSpatialGizmo> seg = spatial_editor->get_selected()->get_gizmo();
 							if (seg.is_valid()) {
+								int handle = -1;
+								Vector3 point;
+								Vector3 normal;
+								bool inters = seg->intersect_ray(camera, _edit.mouse_pos, point, normal, &handle, b->get_shift());
+								if (inters && handle != -1) {
 
-								_edit.gizmo = seg;
-								_edit.gizmo_handle = gizmo_handle;
-								_edit.gizmo_initial_value = seg->get_handle_value(gizmo_handle);
-								break;
+									_edit.gizmo = seg;
+									_edit.gizmo_handle = handle;
+									_edit.gizmo_initial_value = seg->get_handle_value(handle);
+									break;
+								}
 							}
 						}
-					}
 
-					surface->update();
+						if (_gizmo_select(_edit.mouse_pos))
+							break;
+
+						clicked = 0;
+						clicked_includes_current = false;
+
+						if ((spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_SELECT && b->get_control()) || spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_ROTATE) {
+
+							/* HANDLE ROTATION */
+							if (get_selected_count() == 0)
+								break; //bye
+							//handle rotate
+							_edit.mode = TRANSFORM_ROTATE;
+							_compute_edit(b->get_position());
+							break;
+						}
+
+						if (spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_MOVE) {
+
+							if (get_selected_count() == 0)
+								break; //bye
+							//handle translate
+							_edit.mode = TRANSFORM_TRANSLATE;
+							_compute_edit(b->get_position());
+							break;
+						}
+
+						if (spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_SCALE) {
+
+							if (get_selected_count() == 0)
+								break; //bye
+							//handle scale
+							_edit.mode = TRANSFORM_SCALE;
+							_compute_edit(b->get_position());
+							break;
+						}
+
+						// todo scale
+
+						int gizmo_handle = -1;
+
+						clicked = _select_ray(b->get_position(), b->get_shift(), clicked_includes_current, &gizmo_handle, b->get_shift());
+
+						//clicking is always deferred to either move or release
+
+						clicked_wants_append = b->get_shift();
+
+						if (!clicked) {
+
+							if (!clicked_wants_append)
+								_clear_selected();
+
+							//default to regionselect
+							cursor.region_select = true;
+							cursor.region_begin = b->get_position();
+							cursor.region_end = b->get_position();
+						}
+
+						if (clicked && gizmo_handle >= 0) {
+
+							Spatial *spa = Object::cast_to<Spatial>(ObjectDB::get_instance(clicked));
+							if (spa) {
+
+								Ref<EditorSpatialGizmo> seg = spa->get_gizmo();
+								if (seg.is_valid()) {
+
+									_edit.gizmo = seg;
+									_edit.gizmo_handle = gizmo_handle;
+									_edit.gizmo_initial_value = seg->get_handle_value(gizmo_handle);
+									break;
+								}
+							}
+						}
+
+						surface->update();
+					}
 				} else {
 
 					if (_edit.gizmo.is_valid()) {
@@ -1243,7 +1245,7 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 			String n = _edit.gizmo->get_handle_name(_edit.gizmo_handle);
 			set_message(n + ": " + String(v));
 
-		} else if (m->get_button_mask() & BUTTON_MASK_LEFT) {
+		} else if (m->get_button_mask() & BUTTON_MASK_LEFT || spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_BLENDER) {
 
 			if (nav_scheme == NAVIGATION_MAYA && m->get_alt()) {
 				nav_mode = NAVIGATION_ORBIT;
@@ -1780,6 +1782,31 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 	if (k.is_valid()) {
 		if (!k->is_pressed())
 			return;
+		
+		// Blender-like spatial manipulation
+		if (spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_BLENDER) {
+			if (ED_IS_SHORTCUT("spatial_editor/grab", p_event)) {
+				if (_edit.mode != TRANSFORM_TRANSLATE) {
+					_edit.mode = TRANSFORM_TRANSLATE;
+					_edit.plane = TRANSFORM_VIEW;
+					_compute_edit(_edit.mouse_pos);
+				}
+			}
+			if (ED_IS_SHORTCUT("spatial_editor/rotate", p_event)) {
+				if (_edit.mode != TRANSFORM_ROTATE) {
+					_edit.mode = TRANSFORM_ROTATE;
+					_edit.plane = TRANSFORM_VIEW;
+					_compute_edit(_edit.mouse_pos);
+				}
+			}
+			if (ED_IS_SHORTCUT("spatial_editor/scale", p_event)) {
+				if (_edit.mode != TRANSFORM_SCALE) {
+					_edit.mode = TRANSFORM_SCALE;
+					_edit.plane = TRANSFORM_VIEW;
+					_compute_edit(_edit.mouse_pos);
+				}
+			}
+		}
 
 		if (ED_IS_SHORTCUT("spatial_editor/snap", p_event)) {
 			if (_edit.mode != TRANSFORM_NONE) {
