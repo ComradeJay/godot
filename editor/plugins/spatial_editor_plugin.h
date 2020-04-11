@@ -480,6 +480,7 @@ public:
 
 	enum ToolMode {
 
+		TOOL_MODE_BLENDER,
 		TOOL_MODE_SELECT,
 		TOOL_MODE_MOVE,
 		TOOL_MODE_ROTATE,
@@ -555,6 +556,7 @@ private:
 
 	enum MenuOption {
 
+		MENU_TOOL_BLENDER,
 		MENU_TOOL_SELECT,
 		MENU_TOOL_MOVE,
 		MENU_TOOL_ROTATE,

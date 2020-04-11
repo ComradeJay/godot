@@ -4494,6 +4494,7 @@ void SpatialEditor::_menu_item_pressed(int p_option) {
 
 	switch (p_option) {
 
+		case MENU_TOOL_BLENDER:
 		case MENU_TOOL_SELECT:
 		case MENU_TOOL_MOVE:
 		case MENU_TOOL_ROTATE:
@@ -5372,6 +5373,7 @@ void SpatialEditor::_notification(int p_what) {
 
 	if (p_what == NOTIFICATION_READY) {
 
+		tool_button[SpatialEditor::TOOL_MODE_BLENDER]->set_icon(get_icon("ToolSelect", "EditorIcons"));
 		tool_button[SpatialEditor::TOOL_MODE_SELECT]->set_icon(get_icon("ToolSelect", "EditorIcons"));
 		tool_button[SpatialEditor::TOOL_MODE_MOVE]->set_icon(get_icon("ToolMove", "EditorIcons"));
 		tool_button[SpatialEditor::TOOL_MODE_ROTATE]->set_icon(get_icon("ToolRotate", "EditorIcons"));
@@ -5414,6 +5416,7 @@ void SpatialEditor::_notification(int p_what) {
 
 		_finish_indicators();
 	} else if (p_what == EditorSettings::NOTIFICATION_EDITOR_SETTINGS_CHANGED) {
+		tool_button[SpatialEditor::TOOL_MODE_BLENDER]->set_icon(get_icon("ToolSelect", "EditorIcons"));
 		tool_button[SpatialEditor::TOOL_MODE_SELECT]->set_icon(get_icon("ToolSelect", "EditorIcons"));
 		tool_button[SpatialEditor::TOOL_MODE_MOVE]->set_icon(get_icon("ToolMove", "EditorIcons"));
 		tool_button[SpatialEditor::TOOL_MODE_ROTATE]->set_icon(get_icon("ToolRotate", "EditorIcons"));
@@ -5651,6 +5654,14 @@ SpatialEditor::SpatialEditor(EditorNode *p_editor) {
 	Vector<Variant> button_binds;
 	button_binds.resize(1);
 	String sct;
+
+	tool_button[TOOL_MODE_BLENDER] = memnew(ToolButton);
+	hbc_menu->add_child(tool_button[TOOL_MODE_BLENDER]);
+	tool_button[TOOL_MODE_BLENDER]->set_toggle_mode(true);
+	tool_button[TOOL_MODE_BLENDER]->set_flat(true);
+	button_binds.write[0] = MENU_TOOL_BLENDER;
+	tool_button[TOOL_MODE_BLENDER]->connect("pressed", this, "_menu_item_pressed", button_binds);
+	tool_button[TOOL_MODE_BLENDER]->set_shortcut(ED_SHORTCUT("spatial_editor/tool_blender", TTR("Blender Mode"), KEY_T));
 
 	tool_button[TOOL_MODE_SELECT] = memnew(ToolButton);
 	hbc_menu->add_child(tool_button[TOOL_MODE_SELECT]);
