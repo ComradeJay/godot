@@ -1245,7 +1245,7 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 			String n = _edit.gizmo->get_handle_name(_edit.gizmo_handle);
 			set_message(n + ": " + String(v));
 
-		} else if (m->get_button_mask() & BUTTON_MASK_LEFT || spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_BLENDER) {
+		} else if (m->get_button_mask() & BUTTON_MASK_LEFT || ((spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_BLENDER) && (_edit.mode != TRANSFORM_NONE))) {
 
 			if (nav_scheme == NAVIGATION_MAYA && m->get_alt()) {
 				nav_mode = NAVIGATION_ORBIT;
