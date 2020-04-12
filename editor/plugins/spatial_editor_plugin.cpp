@@ -1807,11 +1807,11 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 						}
 					surface->update();
 					set_message(TTR("Transform Aborted."), 3);
+					} else{
+						_compute_edit(_edit.mouse_pos);
+						_edit.plane = TRANSFORM_VIEW;
 					}
-
 					_edit.mode = TRANSFORM_TRANSLATE;
-					_edit.plane = TRANSFORM_VIEW;
-					_compute_edit(_edit.mouse_pos);
 				}
 			}
 			if (ED_IS_SHORTCUT("spatial_editor/rotate", p_event)) {
@@ -1835,11 +1835,11 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 						}
 					surface->update();
 					set_message(TTR("Transform Aborted."), 3);
+					} else{
+						_compute_edit(_edit.mouse_pos);
+						_edit.plane = TRANSFORM_VIEW;
 					}
-
 					_edit.mode = TRANSFORM_ROTATE;
-					_edit.plane = TRANSFORM_VIEW;
-					_compute_edit(_edit.mouse_pos);
 				}
 			}
 			if (ED_IS_SHORTCUT("spatial_editor/scale", p_event)) {
@@ -1863,11 +1863,11 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 						}
 					surface->update();
 					set_message(TTR("Transform Aborted."), 3);
+					} else{
+						_compute_edit(_edit.mouse_pos);
+						_edit.plane = TRANSFORM_VIEW;
 					}
-
 					_edit.mode = TRANSFORM_SCALE;
-					_edit.plane = TRANSFORM_VIEW;
-					_compute_edit(_edit.mouse_pos);
 				}
 			}
 
