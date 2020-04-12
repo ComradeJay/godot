@@ -1886,7 +1886,8 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 
 	// freelook uses most of the useful shortcuts, like save, so its ok
 	// to consider freelook active as end of the line for future events.
-	if (freelook_active)
+	// also accept events during blender transforms.
+	if (freelook_active || _edit.mode != TRANSFORM_NONE)
 		accept_event();
 }
 
