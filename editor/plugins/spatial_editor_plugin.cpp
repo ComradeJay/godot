@@ -1787,6 +1787,27 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 		if (spatial_editor->get_tool_mode() == SpatialEditor::TOOL_MODE_BLENDER) {
 			if (ED_IS_SHORTCUT("spatial_editor/grab", p_event)) {
 				if (_edit.mode != TRANSFORM_TRANSLATE) {
+					if (_edit.mode != TRANSFORM_NONE) {
+					//cancel motion
+
+					List<Node *> &selection = editor_selection->get_selected_node_list();
+
+						for (List<Node *>::Element *E = selection.front(); E; E = E->next()) {
+
+							Spatial *sp = Object::cast_to<Spatial>(E->get());
+							if (!sp)
+								continue;
+
+							SpatialEditorSelectedItem *se = editor_selection->get_node_editor_data<SpatialEditorSelectedItem>(sp);
+							if (!se)
+								continue;
+
+							sp->set_global_transform(se->original);
+						}
+					surface->update();
+					set_message(TTR("Transform Aborted."), 3);
+					}
+
 					_edit.mode = TRANSFORM_TRANSLATE;
 					_edit.plane = TRANSFORM_VIEW;
 					_compute_edit(_edit.mouse_pos);
@@ -1794,6 +1815,27 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 			}
 			if (ED_IS_SHORTCUT("spatial_editor/rotate", p_event)) {
 				if (_edit.mode != TRANSFORM_ROTATE) {
+					if (_edit.mode != TRANSFORM_NONE) {
+					//cancel motion
+
+					List<Node *> &selection = editor_selection->get_selected_node_list();
+
+						for (List<Node *>::Element *E = selection.front(); E; E = E->next()) {
+
+							Spatial *sp = Object::cast_to<Spatial>(E->get());
+							if (!sp)
+								continue;
+
+							SpatialEditorSelectedItem *se = editor_selection->get_node_editor_data<SpatialEditorSelectedItem>(sp);
+							if (!se)
+								continue;
+
+							sp->set_global_transform(se->original);
+						}
+					surface->update();
+					set_message(TTR("Transform Aborted."), 3);
+					}
+
 					_edit.mode = TRANSFORM_ROTATE;
 					_edit.plane = TRANSFORM_VIEW;
 					_compute_edit(_edit.mouse_pos);
@@ -1801,6 +1843,27 @@ void SpatialEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 			}
 			if (ED_IS_SHORTCUT("spatial_editor/scale", p_event)) {
 				if (_edit.mode != TRANSFORM_SCALE) {
+					if (_edit.mode != TRANSFORM_NONE) {
+					//cancel motion
+
+					List<Node *> &selection = editor_selection->get_selected_node_list();
+
+						for (List<Node *>::Element *E = selection.front(); E; E = E->next()) {
+
+							Spatial *sp = Object::cast_to<Spatial>(E->get());
+							if (!sp)
+								continue;
+
+							SpatialEditorSelectedItem *se = editor_selection->get_node_editor_data<SpatialEditorSelectedItem>(sp);
+							if (!se)
+								continue;
+
+							sp->set_global_transform(se->original);
+						}
+					surface->update();
+					set_message(TTR("Transform Aborted."), 3);
+					}
+
 					_edit.mode = TRANSFORM_SCALE;
 					_edit.plane = TRANSFORM_VIEW;
 					_compute_edit(_edit.mouse_pos);
